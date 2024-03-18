@@ -1,0 +1,16 @@
+---
+- name: Ensure postfix is installed.
+  ansible.builtin.apt:
+    name: postfix
+    update_cache: yes
+
+- name: Copy Postfix main.cf template
+  template:
+    src: main.cf.j2
+    dest: /etc/postfix/main.cf
+
+- name: Ensure postfix is started and enabled at boot.
+  service:
+    name: postfix
+    state: "{{ postfix_service_state }}"
+    enabled: "{{ postfix_service_enabled }}"
