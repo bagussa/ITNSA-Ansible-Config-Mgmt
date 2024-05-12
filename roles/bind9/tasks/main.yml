@@ -1,0 +1,23 @@
+---
+- name: Install Bind9
+  apt:
+    name: bind9
+    state: present
+
+- name: Configure named.conf.local
+  template:
+    src: named.conf.local.j2
+    dest: /etc/bind/named.conf.local
+  notify: restart bind
+
+- name: Configure sabang.net zone file
+  template:
+    src: sabang.net.zone.j2
+    dest: /etc/bind/db.sabang.net
+  notify: restart bind
+
+- name: Configure sabang.net reverse zone file
+  template:
+    src: sabang.net.rev.zone.j2
+    dest: /etc/bind/db.192
+  notify: restart bind
