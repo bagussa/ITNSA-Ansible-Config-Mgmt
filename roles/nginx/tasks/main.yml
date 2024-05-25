@@ -1,0 +1,38 @@
+# roles/nginx/tasks/main.yml
+---
+- name: Ensure Nginx is installed
+  apt:
+    name: nginx
+    state: present
+  become: true
+
+- name: Ensure Nginx service is enabled and started
+  service:
+    name: nginx
+    state: started
+    enabled: true
+  become: true
+
+- name: Create document root directory
+  file:
+    path: "{{ nginx_root }}"
+    state: directory
+    owner: "{{ nginx_user }}"
+    group: "{{ nginx_user }}"
+    mode: '0755'
+  become: true
+
+- name: Template Nginx virtual host configuration
+  template:
+    src: "{{ nginx_vhost_template }}"
+    dest: "{{ nginx_sites_available_dir }}/{{ nginx_domain }}"
+  notify:
+    - Reload Nginx
+  become: true
+
+- name: Enable the virtual host
+  file:
+    src: "{{ nginx_sites_available_dir }}/{{ nginx_domain }}"
+    dest: "{{ nginx_sites_enabled_dir }}/{{ nginx_domain }}"
+    state: link
+  become: true

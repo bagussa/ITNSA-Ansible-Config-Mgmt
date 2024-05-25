@@ -1,0 +1,17 @@
+# roles/nginx/templates/nginx_vhost.j2
+server {
+    listen 80;
+    server_name {{ nginx_domain }};
+
+    root {{ nginx_root }};
+    index index.html index.htm;
+
+    location / {
+        try_files $uri $uri/ =404;
+    }
+
+    error_page 500 502 503 504 /50x.html;
+    location = /50x.html {
+        root /usr/share/nginx/html;
+    }
+}

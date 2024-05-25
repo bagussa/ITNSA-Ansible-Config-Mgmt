@@ -1,0 +1,8 @@
+# roles/nginx/defaults/main.yml
+nginx_user: www-data
+nginx_conf_dir: /etc/nginx
+nginx_vhost_template: nginx_vhost.j2
+nginx_sites_available_dir: "{{ nginx_conf_dir }}/sites-available"
+nginx_sites_enabled_dir: "{{ nginx_conf_dir }}/sites-enabled"
+nginx_domain: www.sabang.net
+nginx_root: /var/www/{{ nginx_domain }}
