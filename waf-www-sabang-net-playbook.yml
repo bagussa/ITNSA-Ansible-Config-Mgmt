@@ -1,0 +1,87 @@
+- hosts: webservers
+  become: true
+  vars:
+    nginx_modsecurity_branch: v3.0.3 #modsecurity module
+    nginx_modsecurity_nginx_branch: v1.0.3 #nginx connector to modsecurity
+  tasks:
+  - name: install modsecurity dependencies
+    apt: name="{{ item }}"
+    with_items:
+    - nginx
+    - git
+    - g++
+    - flex
+    - bison
+    - curl
+    - doxygen
+    - libyajl-dev
+    - libgeoip-dev
+    - libtool
+    - dh-autoreconf
+    - libcurl4-gnutls-dev
+    - libxml2
+#    - libpcre++-dev
+    - libxml2-dev
+   
+
+  - name: clone the modsecurity repository
+    git: repo="https://github.com/SpiderLabs/ModSecurity.git" version="{{ nginx_modsecurity_branch }}" accept_hostkey=yes depth=1 force=yes dest=/opt/ModSecurity
+
+  - name: build and install modsecurity
+    shell: "{{ item }}"
+    args:
+      chdir: /opt/ModSecurity
+    with_items:
+    - ./build.sh
+    - git submodule init
+    - git submodule update
+    - ./configure
+    - make
+    - make install
+
+  - name: clone the modsecurity-nginx repository
+    git: repo="https://github.com/SpiderLabs/ModSecurity-nginx.git" version="{{ nginx_modsecurity_nginx_branch }}" accept_hostkey=yes depth=1 force=yes dest=/opt/ModSecurity-nginx
+
+  - name: read the nginx version
+    command: sudo nginx -v
+    register: nginx_version_output
+
+  # nginx writes the version to stderr
+  - name: parse the installed nginx version
+    set_fact:
+      installed_nginx_version: "{{ nginx_version_output.stderr.split('/')[1] }}"
+
+  - name: download and extract the nginx sources for building the module
+    unarchive: src="http://nginx.org/download/nginx-{{ installed_nginx_version }}.tar.gz" remote_src=yes dest=/opt creates="/opt/nginx-{{ installed_nginx_version }}"
+
+  - name: configure the modsecurity-nginx module
+    shell: ./configure --with-compat --add-dynamic-module=/opt/ModSecurity-nginx --with-cc-opt=-Wno-error
+    args:
+      chdir: "/opt/nginx-{{ installed_nginx_version }}"
+
+  - name: build the modsecurity-nginx module
+    shell: make modules
+    args:
+      chdir: "/opt/nginx-{{ installed_nginx_version }}"
+
+  - name: create a directory modules at /etc/nginx/
+    ansible.builtin.file:
+    path: /etc/nginx/modules
+    state: directory
+
+  - name: copy the module to /etc/nginx/modules
+    shell: cp /opt/nginx-{{ installed_nginx_version }}/objs/ngx_http_modsecurity_module.so /etc/nginx/modules
+    args:
+      creates: /etc/nginx/modules/ngx_http_modsecurity_module.so
+
+  - name: load modsecurity inside nginx.conf
+    lineinfile:
+      path: /etc/nginx/nginx.conf
+      insertbefore: BOF
+      line: "load_module /etc/nginx/modules/ngx_http_modsecurity_module.so;"
+
+
+
+#ref mantap https://www.linuxbabe.com/security/modsecurity-nginx-debian-ubuntu
+#https://www.linode.com/docs/guides/securing-nginx-with-modsecurity/
+#belum ada owasp crs https://lipanski.com/posts/modsecurity
