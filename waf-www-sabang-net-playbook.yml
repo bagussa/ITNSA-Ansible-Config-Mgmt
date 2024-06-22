@@ -66,8 +66,8 @@
 
   - name: create a directory modules at /etc/nginx/
     ansible.builtin.file:
-    path: /etc/nginx/modules
-    state: directory
+     path: /etc/nginx/modules
+     state: directory
 
   - name: copy the module to /etc/nginx/modules
     shell: cp /opt/nginx-{{ installed_nginx_version }}/objs/ngx_http_modsecurity_module.so /etc/nginx/modules
