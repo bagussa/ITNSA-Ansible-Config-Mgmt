@@ -1,0 +1,10 @@
+---
+- hosts: ldap
+  become: true
+  roles:
+    - role: "roles/openldap"
+  vars:
+    ldap_domain: "merauke.net"
+    ldap_base_dn: "dc=merauke,dc=net"
+    ldap_admin_password: "Skills39"
+   

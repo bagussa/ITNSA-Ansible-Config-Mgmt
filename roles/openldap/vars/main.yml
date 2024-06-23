@@ -1,0 +1,4 @@
+---
+ldap_domain: "sabang.net"
+ldap_base_dn: "dc=sabang,dc=net"
+ldap_admin_password: "Skills39"
